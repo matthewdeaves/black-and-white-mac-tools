@@ -1,13 +1,23 @@
-# old-mac-game-patcher
+# Black & White Mac Tools
 
-Makes **Black & White** and **Creature Isle** for Mac run on **Mac OS X 10.5
-Leopard**, where they otherwise crash a few seconds after launch.
+<img src="icons/patcher-256.png" width="150" align="right" alt="">
 
-The games work on 10.4 Tiger. On 10.5 they die during the opening logo movies
-with `EXC_BAD_ACCESS (SIGBUS)` at address `0x6898`. This tool fixes that by
-writing 48 bytes into the game's executable, and it can put them back.
+Two small tools for **Black & White** and **Creature Isle** on old Macs.
 
-It ships no game content. It patches a copy of the game you already own.
+**Black & White Patcher** makes the games run on **Mac OS X 10.5 Leopard**,
+where they otherwise crash a few seconds after launch. They work on 10.4 Tiger;
+on 10.5 they die during the opening logo movies with `EXC_BAD_ACCESS (SIGBUS)`
+at address `0x6898`. This writes 48 bytes into the game's executable to fix it,
+and can put them back.
+
+**Black & White Display** sets the game's resolution, colour depth and
+fullscreen mode, including resolutions the game's own setup screen does not
+offer.
+
+Neither ships any game content. They work on a copy of the game you already own.
+
+**Status:** the patcher works and is tested on hardware, as a command line tool.
+The two drag-and-drop apps and the display tool are being built.
 
 ## The bug in one paragraph
 
@@ -98,6 +108,35 @@ make                      # native
 For a fat PowerPC and Intel build that runs on 10.4 and 10.5, see
 [docs/BUILDING.md](docs/BUILDING.md).
 
+## Black & White Display
+
+<img src="icons/display-256.png" width="120" align="right" alt="">
+
+The Mac port keeps its settings in an XML file that imitates the Windows
+registry:
+
+```
+~/Library/Preferences/Lionhead/Black & White/Preferences Data
+```
+
+Resolution lives there as plain integers, so it does not need a binary patch at
+all. The keys that matter:
+
+| key | meaning |
+|---|---|
+| `ScreenW` / `ScreenH` | resolution in pixels |
+| `ScreenD` | colour depth, 16 or 32 |
+| `FullScreen` | 0 windowed, 1 fullscreen |
+| `UseDesktopRes` | 1 to just take the desktop resolution |
+| `UseDesktopDepth` | 1 to just take the desktop depth |
+| `VSync` | 0 or 1 |
+| `FSAAEnabled` / `FSAALevel` | anti-aliasing |
+
+Setting `ScreenW`/`ScreenH` directly will go past what the setup screen's
+resolution stepper offers. Prefer a mode the display actually supports: a
+fullscreen switch to a non-native mode is the kind of thing that hangs some of
+this hardware.
+
 ## Credits
 
 Black & White is by Lionhead Studios. The Mac version is by Feral Interactive.
@@ -105,6 +144,11 @@ Creature Isle is its expansion. This project is not connected with either.
 
 The Platinum Pack this was developed against is catalogued at
 [Macintosh Garden](https://macintoshgarden.org/games/black-white-platinum-pack).
+
+The icons are built by the pipeline from the
+[old-mac-halflife](https://github.com/matthewdeaves) port: legacy ICNS chunks
+plus a 256px `ic08`, which is the largest 10.3 Panther will accept before it
+silently falls back to a generic icon.
 
 ## Scope
 
