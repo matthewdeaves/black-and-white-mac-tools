@@ -117,12 +117,15 @@ static void applyAll(int revert)
     summary[0] = 0;
     for (i = 0; i < gFoundCount; i++) {
         omgp_info in;
-        int rc = revert ? omgp_revert(gFound[i], &in) : omgp_patch(gFound[i], &in);
+        int exact = 0;
+        int rc = revert ? omgp_revert(gFound[i], &in, &exact)
+                        : omgp_patch(gFound[i], &in);
         const char *name = strrchr(gFound[i], '/');
         name = name ? name + 1 : gFound[i];
         if (rc == OMGP_OK) {
             done++;
-            snprintf(line, sizeof(line), "%s  -  %s\r", name, revert ? "put back" : "fixed");
+            snprintf(line, sizeof(line), "%s  -  %s\r", name,
+                     revert ? (exact ? "put back" : "put back (rebuilt)") : "fixed");
         } else if (rc == OMGP_STATE) {
             snprintf(line, sizeof(line), "%s  -  nothing to do\r", name);
         } else {

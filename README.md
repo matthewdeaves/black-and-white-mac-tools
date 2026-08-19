@@ -18,8 +18,9 @@ Neither ships any game content. They work on a copy of the game you already own.
 
 **Download:** the
 [latest release](https://github.com/matthewdeaves/black-and-white-mac-tools/releases)
-has a disc image with both apps on it. Mac OS X 10.3.9 through 10.6, PowerPC or
-Intel, universal. Run them from anywhere.
+is a disc image with the two apps on it, nothing else to install or keep track
+of. Mac OS X 10.3.9 through 10.6, PowerPC or Intel, universal. Run them from
+anywhere: the disc, the desktop, or Applications.
 
 ## The bug in one paragraph
 
@@ -93,19 +94,32 @@ Point it at a folder and it walks it, examining every PowerPC PEF executable it
 finds and ignoring everything else.
 
 `patch` writes an undo record next to the executable as `<name>.omgpbak`
-holding the original 48 bytes. `revert` uses it, then deletes it. Because the
-patch is written in place and the undo record only stores the changed bytes,
-nothing ever copies the file, so **resource forks are never at risk**. That
-matters here: the game binaries carry 186 KB and 218 KB resource forks that a
-naive `cp` or `scp` would silently discard.
+holding the original 48 bytes. `revert` prefers it and restores the file byte
+for byte, then deletes it.
+
+**Undoing without a record also works.** If the file was patched some other way,
+or the record was deleted, `revert` puts the game's own instruction back and
+clears the stub. The stub sits in a traceback table, which is debug metadata
+nothing reads at runtime, so the game behaves exactly as it did before. Measured
+on Black & White 1.1.9: 31 bytes then differ from the original, all of them the
+text `.IsObject__16GameThingWithPos`, and none of them code. The tool says which
+of the two happened rather than pretending they are the same.
+
+Because the patch is written in place and the undo record only stores the
+changed bytes, nothing ever copies the file, so **resource forks are never at
+risk**. That matters here: the game binaries carry 186 KB and 218 KB resource
+forks that a naive `cp` or `scp` would silently discard.
 
 Both operations re-read the file from disk afterwards and verify the result.
 
 ## Build
 
 ```
-make                      # native
+make                      # native, gives the command line tool
 ```
+
+The command line tool is for building from source. It is not on the disc image:
+each app has the engine compiled into it, so there is nothing beside them.
 
 For a fat PowerPC and Intel build that runs on 10.4 and 10.5, see
 [docs/BUILDING.md](docs/BUILDING.md).

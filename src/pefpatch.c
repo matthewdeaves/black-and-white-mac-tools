@@ -66,6 +66,7 @@ const char *omgp_strerror(int err)
     case OMGP_CAVE_SMALL:  return "not enough dead space for the stub";
     case OMGP_IO:          return "read or write failure";
     case OMGP_STATE:       return "file is not in the expected state";
+    case OMGP_NOBACKUP:    return "no undo record beside this file";
     }
     return "unknown error";
 }
@@ -303,13 +304,15 @@ int omgp_patch(const char *path, omgp_info *info)
     return info->patched ? OMGP_OK : OMGP_STATE;
 }
 
-int omgp_revert(const char *path, omgp_info *info)
+int omgp_revert(const char *path, omgp_info *info, int *exact)
 {
-    unsigned char *d = NULL, saved[OMGP_STUB_LEN + 4];
+    unsigned char *d = NULL, saved[OMGP_STUB_LEN + 4], blank[OMGP_STUB_LEN];
     unsigned long n, stub_at = 0, entry = 0;
     char ubuf[2048], line[256], md5[64];
-    int rc;
+    int rc, have_record = 0;
     FILE *u;
+
+    if (exact) *exact = 0;
 
     rc = omgp_read_file(path, &d, &n);
     if (rc != OMGP_OK) return rc;
@@ -318,17 +321,31 @@ int omgp_revert(const char *path, omgp_info *info)
     if (rc != OMGP_OK) return rc;
     if (!info->patched) return OMGP_STATE;
 
+    md5[0] = 0;
     undo_path(path, ubuf, sizeof(ubuf));
     u = fopen(ubuf, "rb");
-    if (!u) return OMGP_IO;
-    if (!fgets(line, sizeof(line), u) || strncmp(line, "oldmacpatch-undo 1", 18) != 0)
-        { fclose(u); return OMGP_STATE; }
-    if (fscanf(u, "md5 %63s\nstub %lu\nentry %lu\n", md5, &stub_at, &entry) != 3)
-        { fclose(u); return OMGP_STATE; }
-    if (stub_at != info->stub_at || entry != info->entry) { fclose(u); return OMGP_STATE; }
-    if (fread(saved, 1, OMGP_STUB_LEN + 4, u) != OMGP_STUB_LEN + 4)
-        { fclose(u); return OMGP_IO; }
-    fclose(u);
+    if (u) {
+        if (fgets(line, sizeof(line), u) &&
+            strncmp(line, "oldmacpatch-undo 1", 18) == 0 &&
+            fscanf(u, "md5 %63s\nstub %lu\nentry %lu\n", md5, &stub_at, &entry) == 3 &&
+            stub_at == info->stub_at && entry == info->entry &&
+            fread(saved, 1, OMGP_STUB_LEN + 4, u) == OMGP_STUB_LEN + 4) {
+            have_record = 1;
+        }
+        fclose(u);
+    }
+
+    if (!have_record) {
+        /* Reconstruct. The stub sits in a traceback table, so clearing it costs
+           only debug metadata; putting the entry instruction back is what
+           actually matters. */
+        memset(blank, 0, sizeof(blank));
+        memcpy(saved, blank, OMGP_STUB_LEN);
+        saved[OMGP_STUB_LEN + 0] = 0x80; saved[OMGP_STUB_LEN + 1] = 0xa4;
+        saved[OMGP_STUB_LEN + 2] = 0x01; saved[OMGP_STUB_LEN + 3] = 0x00;
+        stub_at = info->stub_at;
+        entry   = info->entry;
+    }
 
     rc = write_at(path, stub_at, saved, OMGP_STUB_LEN);
     if (rc != OMGP_OK) return rc;
@@ -341,7 +358,11 @@ int omgp_revert(const char *path, omgp_info *info)
     free(d);
     if (rc != OMGP_OK) return rc;
     if (info->patched) return OMGP_STATE;
-    if (strcmp(info->md5, md5) != 0) return OMGP_STATE;
-    remove(ubuf);
+
+    if (have_record) {
+        if (strcmp(info->md5, md5) != 0) return OMGP_STATE;
+        remove(ubuf);
+        if (exact) *exact = 1;
+    }
     return OMGP_OK;
 }

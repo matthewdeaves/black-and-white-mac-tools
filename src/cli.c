@@ -39,6 +39,7 @@ static void report(const char *path, omgp_info *in, int rc, const char *action)
 static int do_one(const char *path, const char *cmd)
 {
     omgp_info in;
+    int exact = 0;
     unsigned char *d = NULL;
     unsigned long n = 0;
     int rc;
@@ -57,10 +58,13 @@ static int do_one(const char *path, const char *cmd)
         return rc == OMGP_OK ? 0 : 1;
     }
     if (strcmp(cmd, "revert") == 0) {
-        rc = omgp_revert(path, &in);
+        rc = omgp_revert(path, &in, &exact);
         if (rc == OMGP_STATE && !in.patched)
             { report(path, &in, OMGP_OK, "not patched, nothing to do"); return 0; }
-        report(path, &in, rc, rc == OMGP_OK ? "reverted, verified on disk" : NULL);
+        report(path, &in, rc, rc == OMGP_OK ?
+               (exact ? "reverted from the undo record, byte for byte"
+                      : "reverted: original instruction restored, stub cleared")
+               : NULL);
         return rc == OMGP_OK ? 0 : 1;
     }
     fprintf(stderr, "unknown command: %s\n", cmd);
@@ -86,6 +90,7 @@ static int walk(const char *path, const char *cmd, int *seen)
             if (ent->d_name[0] == '.') continue;
             /* our own undo records, which we may delete mid-walk */
             if (nl > 8 && strcmp(ent->d_name + nl - 8, ".omgpbak") == 0) continue;
+            if (nl > 5 && strcmp(ent->d_name + nl - 5, ".orig") == 0) continue;
             if (strlen(path) + strlen(ent->d_name) + 2 >= sizeof(child)) continue;
             sprintf(child, "%s/%s", path, ent->d_name);
             bad |= walk(child, cmd, seen);

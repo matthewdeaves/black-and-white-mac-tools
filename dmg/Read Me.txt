@@ -49,6 +49,13 @@ fullscreen mode the display cannot do is the sort of thing that can hang some
 of this hardware.
 
 
+WHAT IS ON THIS DISC
+-------------------
+
+Two applications and this file. Each app is self contained: drag them wherever
+you like, or run them straight off this disc.
+
+
 WHAT RUNS THESE
 ---------------
 

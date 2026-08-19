@@ -18,6 +18,7 @@
 #define OMGP_CAVE_SMALL     -6   /* not enough dead space for the stub */
 #define OMGP_IO             -7   /* read/write failure                 */
 #define OMGP_STATE          -8   /* file not in the expected state     */
+#define OMGP_NOBACKUP    -9   /* no undo record beside the file     */
 
 #define OMGP_STUB_LEN  44
 #define OMGP_DELTA     0x38      /* stub sits this far below the entry */
@@ -44,7 +45,17 @@ int  omgp_scan(const unsigned char *d, unsigned long n, omgp_info *info);
 
 /* Apply / undo. Both verify state before and after writing. */
 int  omgp_patch(const char *path, omgp_info *info);
-int  omgp_revert(const char *path, omgp_info *info);
+
+/*
+ * Undo. Prefers the .omgpbak record written by omgp_patch, which restores the
+ * file byte for byte. Without one, it can still put the game's own instruction
+ * back and clear the stub: the region the stub occupies is a traceback table,
+ * which is debug metadata nothing reads at runtime, so the game behaves as it
+ * did before even though the file will not match its original md5.
+ *
+ * Sets *exact to 1 when an undo record was used, 0 when it was reconstructed.
+ */
+int  omgp_revert(const char *path, omgp_info *info, int *exact);
 
 /* Is this file a PowerPC PEF at all? Cheap check for directory walks. */
 int  omgp_is_pef(const char *path);

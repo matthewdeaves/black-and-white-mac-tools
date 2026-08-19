@@ -7,7 +7,7 @@
 set -e
 cd "$(dirname "$0")/.."
 
-VER=${1:-1.0}
+VER=${1:-1.0.1}
 VOL="Black & White Mac Tools"
 OUT="Black-and-White-Mac-Tools-$VER.dmg"
 STAGE=/tmp/bwt-stage
@@ -19,8 +19,9 @@ mkdir -p "$STAGE"
 ditto --rsrc "dist/Black & White Patcher.app" "$STAGE/Black & White Patcher.app"
 ditto --rsrc "dist/Black & White Display.app" "$STAGE/Black & White Display.app"
 cp "dmg/Read Me.txt" "$STAGE/Read Me.txt"
-mkdir -p "$STAGE/Command Line"
-cp dist/oldmacpatch "$STAGE/Command Line/oldmacpatch"
+# Just the two apps. Each has the patch engine compiled in, so there is nothing
+# else for a user to keep track of. The command line tool is for people building
+# from source, and is not on the disc.
 
 hdiutil create -srcfolder "$STAGE" -volname "$VOL" -format UDZO -imagekey zlib-level=9 "$OUT"
 rm -rf "$STAGE"

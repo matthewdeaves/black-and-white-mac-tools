@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 SDK=${SDK:-/Developer/SDKs/MacOSX10.4u.sdk}
 MIN=${MIN:-10.3.9}
 CC=${CC:-gcc-4.0}
-VER=${VER:-1.0}
+VER=${VER:-1.0.1}
 OUT=dist
 
 [ -d "$SDK" ] || { echo "SDK not found: $SDK" >&2; exit 1; }
