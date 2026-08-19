@@ -195,6 +195,20 @@ int omgp_scan(const unsigned char *d, unsigned long n, omgp_info *info)
     info->entry = entry;
     info->patched = patched;
 
+    info->stub_at = entry - OMGP_DELTA;
+
+    /*
+     * On a patched file the original traceback table is underneath our stub and
+     * cannot be recovered, so report the region we occupy and say nothing about
+     * whose it was. Scanning here would walk straight past the stub and name
+     * some earlier function, which is how this first reported itself.
+     */
+    if (patched) {
+        info->cave = info->stub_at;
+        info->cave_size = OMGP_DELTA;
+        return OMGP_OK;
+    }
+
     /* The cave is the previous function's traceback table: dead metadata that
        begins with a zero word and is preceded by that function's blr. */
     limit = (entry > b + 0x400UL) ? (entry - 0x400UL) : b;
@@ -205,19 +219,23 @@ int omgp_scan(const unsigned char *d, unsigned long n, omgp_info *info)
     info->cave = cave;
     info->cave_size = entry - cave;
     if (info->cave_size < OMGP_DELTA) return OMGP_CAVE_SMALL;
-    info->stub_at = entry - OMGP_DELTA;
 
     /* Name the function whose traceback table we are borrowing, for the log. */
     {
-        unsigned long q; unsigned int l;
+        unsigned long q, k; unsigned int l; int ok;
         for (q = cave; q + 2 < entry; q++) {
             l = be16(d + q);
-            if (l >= 4 && l < sizeof(info->prev_symbol) && q + 2 + l <= entry &&
-                d[q + 2] == '.') {
-                memcpy(info->prev_symbol, d + q + 2, l);
-                info->prev_symbol[l] = 0;
-                break;
+            if (l < 4 || l >= sizeof(info->prev_symbol)) continue;
+            if (q + 2 + l > entry || d[q + 2] != '.') continue;
+            ok = 1;
+            for (k = 0; k < l; k++) {
+                unsigned char c = d[q + 2 + k];
+                if (c < 0x21 || c > 0x7e) { ok = 0; break; }
             }
+            if (!ok) continue;
+            memcpy(info->prev_symbol, d + q + 2, l);
+            info->prev_symbol[l] = 0;
+            break;
         }
     }
     return OMGP_OK;

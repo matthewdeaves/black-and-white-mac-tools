@@ -16,8 +16,10 @@ offer.
 
 Neither ships any game content. They work on a copy of the game you already own.
 
-**Status:** the patcher works and is tested on hardware, as a command line tool.
-The two drag-and-drop apps and the display tool are being built.
+**Download:** the
+[latest release](https://github.com/matthewdeaves/black-and-white-mac-tools/releases)
+has a disc image with both apps on it. Mac OS X 10.3.9 through 10.6, PowerPC or
+Intel, universal. Run them from anywhere.
 
 ## The bug in one paragraph
 
@@ -133,9 +135,21 @@ all. The keys that matter:
 | `FSAAEnabled` / `FSAALevel` | anti-aliasing |
 
 Setting `ScreenW`/`ScreenH` directly will go past what the setup screen's
-resolution stepper offers. Prefer a mode the display actually supports: a
+resolution stepper offers. Confirmed at 1920x1080, 32 bit, fullscreen on a Power
+Mac G5 Quad with a GeForce 6600. Prefer a mode the display actually supports: a
 fullscreen switch to a non-native mode is the kind of thing that hangs some of
 this hardware.
+
+## How this was made
+
+These tools were made with **Claude, Anthropic's AI**, working with Matthew
+Deaves on his machines. That includes the analysis of the crash: reading the
+symbols back out of the game's CFM binaries, finding the faulting instruction,
+and working out why Tiger survives the fault and Leopard does not.
+
+Everything stated here about the crash was measured on real hardware rather than
+guessed, and both tools were tested on a Power Mac G5 Quad before release. Where
+something is inferred rather than measured, the write-up says so.
 
 ## Credits
 

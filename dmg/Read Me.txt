@@ -1,0 +1,82 @@
+Black & White Mac Tools
+=======================
+
+Two tools for Black & White and Creature Isle on old Macs.
+
+They contain no game content. They work on a copy of the game you already own.
+
+
+BLACK & WHITE PATCHER
+---------------------
+
+Makes the games run on Mac OS X 10.5 Leopard.
+
+The games work on 10.4 Tiger. On 10.5 they crash a few seconds after launch,
+during the opening logo movies. This fixes that by changing 48 bytes in the
+game's program, and it can change them back.
+
+  1. Quit the game if it is running.
+  2. Open Black & White Patcher.
+  3. It looks for the game in the usual places. If it does not find it, use
+     Choose Folder, or drag the game's folder onto the app.
+  4. Click Fix.
+
+Put Back undoes it. A copy of the original bytes is kept next to the program,
+so putting it back always works.
+
+Why it crashes, in short: during the intro movies the game reads through a
+pointer that has not been set up yet. On Tiger the address it lands on happens
+to be readable, so the bad read passes unnoticed. On Leopard it is not, and the
+game dies. The fix makes the game stop doing it. It is correct on both systems.
+
+
+BLACK & WHITE DISPLAY
+---------------------
+
+Sets the game's resolution, colours and fullscreen mode, including resolutions
+the game's own setup screen will not offer you.
+
+  1. Run the game once, so it writes its settings file.
+  2. Open Black & White Display.
+  3. Pick a resolution and colour depth, tick Full screen if you want it.
+  4. Click Save.
+
+The resolution list comes from what your display actually reports, plus the
+usual sizes. Your original settings are kept alongside the file it edits.
+
+One caution: prefer a mode your monitor really supports. Switching to a
+fullscreen mode the display cannot do is the sort of thing that can hang some
+of this hardware.
+
+
+WHAT RUNS THESE
+---------------
+
+Mac OS X 10.3.9 through 10.6, PowerPC or Intel. Both apps are universal.
+
+Run them from anywhere: the disc, the desktop, or your Applications folder.
+
+
+HOW THIS WAS MADE
+-----------------
+
+These tools were made with Claude, Anthropic's AI, working with Matthew Deaves
+on his machines. That includes the analysis of the crash: reading the symbols
+back out of the game's CFM binaries, finding the faulting instruction, and
+working out why Tiger survives the fault and Leopard does not.
+
+Everything stated about the crash was measured on real hardware, not guessed,
+and the patch was tested on a Power Mac G5 Quad running 10.5.8 before release.
+
+
+CREDITS
+-------
+
+Black & White is by Lionhead Studios. The Mac version is by Feral Interactive.
+Creature Isle is its expansion. This project is not connected with either.
+
+The Platinum Pack these were developed against is catalogued at Macintosh
+Garden: https://macintoshgarden.org/games/black-white-platinum-pack
+
+Source, and the full technical write-up:
+https://github.com/matthewdeaves/black-and-white-mac-tools
