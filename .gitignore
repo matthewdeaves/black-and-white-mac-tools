@@ -1,0 +1,4 @@
+oldmacpatch
+src/*.o
+*.omgpbak
+.DS_Store
